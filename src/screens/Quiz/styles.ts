@@ -23,5 +23,9 @@ export const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     marginTop: 24,
+  },
+  header: {
+    width: '100%',
+    marginBottom: 21
   }
 });
