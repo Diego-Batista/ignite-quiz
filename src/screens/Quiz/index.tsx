@@ -6,6 +6,7 @@ import Animated, {
   Easing,
   Extrapolate,
   interpolate,
+  runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -31,6 +32,9 @@ import { QuizHeader } from '../../components/QuizHeader';
 interface Params {
   id: string;
 }
+
+const CARD_INCLINATION = 10
+const CARD_SKIP_AREA = (-200)
 
 type QuizProps = typeof QUIZ[0];
 
@@ -157,10 +161,28 @@ export function Quiz() {
   const onPan =  Gesture
   .Pan()
   .onUpdate((event) => {
-    cardPosition.value = event.translationX
+    const moveToLeft = event.translationX < 0;
+
+    if(moveToLeft) {
+      cardPosition.value = event.translationX
+    }
   })
-  .onEnd(() => {
+  .onEnd((event) => {
+    if(event.translationX < CARD_SKIP_AREA) {
+      runOnJS(handleSkipConfirm)();
+    }
+
     cardPosition.value = withTiming(0)
+  })
+
+  const dragStyles = useAnimatedStyle(() => {
+    const rotateZ = cardPosition.value / CARD_INCLINATION;
+    return {
+      transform: [
+        { translateX: cardPosition.value },
+        { rotateZ: `${rotateZ}deg` }
+      ]
+    }
   })
 
   useEffect(() => {
@@ -203,7 +225,7 @@ export function Quiz() {
         </Animated.View>
 
         <GestureDetector gesture={onPan}>
-          <Animated.View style={shakeStyleAnimated}>
+          <Animated.View style={[shakeStyleAnimated, dragStyles]}>
             <Question
               key={quiz.questions[currentQuestion].title}
               question={quiz.questions[currentQuestion]}
